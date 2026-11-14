@@ -1,25 +1,30 @@
 # Malla — chat estilo WhatsApp con Internet + malla Bluetooth
 
-## Qué hay en cada carpeta
+## Archivos (todo debe quedar en la RAÍZ del repositorio)
 ```
-index.html              ← prototipo web (abre directo o publícalo con GitHub Pages)
-manifest.webmanifest    ← instalable como app web (PWA)
-icons/                  ← favicon, apple-touch, 192, 512, maskable
-server/                 ← servidor WebSocket (Node)
-app/                    ← app Flutter (Android/iOS/Web)
-  lib/                  ← código Dart
-  web/                  ← index.html, manifest e iconos de Flutter web
-  assets/icon/icon.png  ← icono 1024 para Android/iOS
-  tool/setup_android.sh ← permisos Android
-.github/workflows/      ← compila el APK en cada push
+index.html            prototipo web (GitHub Pages)
+manifest.webmanifest  datos de instalación (nombre, colores, iconos)
+sw.js                 service worker: instalable y abre sin Internet
+icons/                icon-192, icon-512, icon-maskable-512, apple-touch-icon, favicon
+.nojekyll  .gitignore (archivos que empiezan con punto)
+server/               servidor WebSocket (Node)
+app/                  app Flutter
+  assets/icon/        icon.png, icon_ios.png, foreground.png, background.png
+  web/                index.html, manifest e iconos de Flutter web
+.github/workflows/    compila el APK en cada push
 ```
-## Ver el index.html en GitHub
-Settings → Pages → Branch: main, carpeta /(root) → tu sitio queda en https://USUARIO.github.io/REPO/
+Si al subir por la web de GitHub los archivos con punto quedaron como `_gitignore` / `_nojekyll`, renómbralos a `.gitignore` / `.nojekyll`.
+La carpeta `icons/` es obligatoria: sin ella no hay icono al instalar.
 
-## Iconos
-- Web/PWA: ya incluidos (icono 3D generado desde tu imagen) (icons/ y app/web/icons/).
-- Android/iOS: `cd app && flutter create . && dart run flutter_launcher_icons` los genera desde assets/icon/icon.png.
-  (Las carpetas android/ e ios/ no vienen en el pack: las crea `flutter create .`.)
+## Instalar la web como app con su icono
+- Publica: Settings → Pages → Branch main, carpeta /(root).
+- Android (Chrome): menú de tres puntos de la app → «Instalar app», o menú de Chrome → «Instalar aplicación». Usa icon-192/512 y el maskable.
+- iPhone (Safari): Compartir → «Añadir a pantalla de inicio». Usa apple-touch-icon.png.
+- Al reinstalar, borra la anterior: el sistema guarda el icono viejo.
+
+## Icono en la app Flutter (APK / iOS)
+`cd app && flutter create . && flutter pub get && dart run flutter_launcher_icons`
+Genera los iconos de lanzador de Android (con versión adaptable) e iOS desde assets/icon/. El flujo de GitHub ya lo ejecuta.
 
 ## Arranque de la app
 1. `cd server && npm i && node server.js`
@@ -28,5 +33,5 @@ Settings → Pages → Branch: main, carpeta /(root) → tu sitio queda en https
 
 ## Estado honesto
 - index.html es un prototipo con «vecino» simulado; no conecta a otras personas.
-- La app Flutter no fue compilada ni probada por mí. `lib/transports/ble_radio.dart` es un stub (sin Bluetooth real).
+- La app Flutter no fue compilada ni probada. `lib/transports/ble_radio.dart` es un stub (sin Bluetooth real).
 - Sin cifrado, cuentas ni salas privadas.

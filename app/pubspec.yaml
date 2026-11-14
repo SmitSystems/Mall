@@ -1,0 +1,27 @@
+name: malla
+description: Chat híbrido Internet + malla Bluetooth
+publish_to: none
+environment: { sdk: ">=3.3.0 <4.0.0" }
+dependencies:
+  flutter: { sdk: flutter }
+  web_socket_channel: ^3.0.0
+  image_picker: ^1.1.0
+  geolocator: ^12.0.0
+  record: ^5.1.0
+  audioplayers: ^6.0.0
+  path_provider: ^2.1.0
+  # bluetooth_low_energy: ^6.0.0   # activar al implementar BleRadio real
+dev_dependencies:
+  flutter_launcher_icons: ^0.14.0
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/icon.png"
+  image_path_ios: "assets/icon/icon_ios.png"
+  remove_alpha_ios: true
+  adaptive_icon_background: "assets/icon/background.png"
+  adaptive_icon_foreground: "assets/icon/foreground.png"
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/icon/icon.png
