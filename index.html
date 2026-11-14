@@ -3,181 +3,207 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Malla · Chat híbrido</title>
+<title>Malla · Chat</title>
 <link rel="icon" href="icons/favicon.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#075e54">
+<meta name="theme-color" content="#0a5f66">
 <style>
-:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
---bg:#f4f5f7;--surf:#fff;--tx:#14171c;--mut:#667085;--bd:#e2e5ea;--acc:#0b6bcb;--bt:#6d3fc9;--ok:#1a7f4b;--out:#dbeafe;--inn:#fff}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#0f1216;--surf:#181c22;--tx:#eef1f5;--mut:#98a2b3;--bd:#2a313b;--acc:#5aa9ff;--bt:#b794ff;--ok:#4cc38a;--out:#173250;--inn:#1e242c}}
-:root[data-theme="dark"]{color-scheme:dark;--bg:#0f1216;--surf:#181c22;--tx:#eef1f5;--mut:#98a2b3;--bd:#2a313b;--acc:#5aa9ff;--bt:#b794ff;--ok:#4cc38a;--out:#173250;--inn:#1e242c}
-html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
-*{box-sizing:border-box}
-body{margin:0;height:100%;background:var(--bg);color:var(--tx);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column}
-header{padding:10px 14px;background:var(--surf);border-bottom:1px solid var(--bd)}
-h1{font-size:17px;margin:0;display:flex;justify-content:space-between;align-items:center;gap:8px}
-.chip{font-size:12px;padding:3px 10px;border-radius:99px;border:1px solid var(--bd);font-weight:600}
-.chip.net{color:var(--acc)}.chip.bt{color:var(--bt)}.chip.off{color:var(--mut)}
-.bar{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
-button,select{font:inherit;color:var(--tx);background:var(--surf);border:1px solid var(--bd);border-radius:10px;padding:7px 11px;cursor:pointer}
-button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
-button.pri{background:var(--acc);color:#fff;border-color:var(--acc)}
-#log{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
-.m{max-width:88%;padding:8px 11px;border-radius:14px;background:var(--inn);border:1px solid var(--bd)}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--h1:#0a5f66;--h2:#0e8a8c;--bg:#e6eeea;--inn:#fff;--out:#d3f4ea;--tx:#111b21;--mut:#667781;--acc:#12a89a;--pill:#fff;--do:.3;--pop:#fff}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--h1:#0f2a30;--h2:#15393f;--bg:#0b141a;--inn:#1f2c34;--out:#0b5750;--tx:#e9edef;--mut:#8696a0;--acc:#1fc3b1;--pill:#1f2c34;--do:.16;--pop:#233138}}
+:root[data-theme="dark"]{color-scheme:dark;--h1:#0f2a30;--h2:#15393f;--bg:#0b141a;--inn:#1f2c34;--out:#0b5750;--tx:#e9edef;--mut:#8696a0;--acc:#1fc3b1;--pill:#1f2c34;--do:.16;--pop:#233138}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;height:100%;display:flex;flex-direction:column;background:var(--bg);color:var(--tx);font:15px/1.35 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;max-width:720px;margin-inline:auto;box-shadow:0 0 40px rgba(0,0,0,.15)}
+.i{width:24px;height:24px;fill:currentColor;flex:none}
+header{position:relative;display:flex;align-items:center;gap:10px;padding:8px 8px 8px 12px;color:#fff;background:linear-gradient(135deg,var(--h1),var(--h2));box-shadow:0 2px 8px rgba(0,0,0,.25);z-index:5}
+.av{width:42px;height:42px;border-radius:50%;box-shadow:0 0 0 2px rgba(255,255,255,.25),0 3px 8px rgba(0,0,0,.35)}
+.ttl{flex:1;min-width:0;display:flex;flex-direction:column}.ttl b{font-size:17px;font-weight:600}.ttl small{font-size:12px;opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ib{background:none;border:0;color:inherit;padding:8px;border-radius:50%;cursor:pointer;display:grid;place-items:center}.ib:active,.ib.on{background:rgba(255,255,255,.22)}
+#menu,#att{position:absolute;background:var(--pop);color:var(--tx);border-radius:14px;box-shadow:0 8px 28px rgba(0,0,0,.3);z-index:9}
+#menu{right:8px;top:100%;padding:6px 0;min-width:230px}#menu button{display:block;width:100%;text-align:left;background:none;border:0;color:inherit;font:inherit;padding:11px 18px;cursor:pointer}
+#menu button.sel{color:var(--acc);font-weight:600}#menu hr{border:0;border-top:1px solid rgba(128,128,128,.25);margin:4px 0}
+main{position:relative;flex:1;overflow:hidden}
+.bg{position:absolute;inset:0;width:100%;height:100%;opacity:var(--do);pointer-events:none}
+#log{position:absolute;inset:0;overflow-y:auto;padding:10px 8px;display:flex;flex-direction:column;gap:5px}
+.m{position:relative;align-self:flex-start;max-width:82%;margin:0 8px;padding:6px 9px 4px;border-radius:10px;background:var(--inn);box-shadow:0 1px .5px rgba(11,20,26,.18);word-wrap:break-word}
 .m.me{align-self:flex-end;background:var(--out)}
-.m.sys{align-self:center;background:none;border:none;color:var(--mut);font-size:13px;text-align:center}
-.meta{font-size:11px;color:var(--mut);margin-top:3px}
-.m img{max-width:100%;border-radius:10px;display:block}
-canvas{width:100%;max-width:320px;border-radius:8px;border:1px solid var(--bd);display:block;margin-top:6px}
-a{color:var(--acc)}
-form{display:flex;gap:6px;padding:10px;background:var(--surf);border-top:1px solid var(--bd)}
-input[type=text]{flex:1;min-width:0;font:inherit;color:var(--tx);background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:9px 11px}
-dialog{border:1px solid var(--bd);border-radius:14px;background:var(--surf);color:var(--tx);max-width:420px;width:92%}
-dialog li{margin:6px 0}
+.m.tail::before{content:"";position:absolute;top:0;width:10px;height:13px;background:inherit}
+.m.tail:not(.me){border-top-left-radius:0}.m.tail:not(.me)::before{left:-8px;clip-path:polygon(100% 0,0 0,100% 100%)}
+.m.tail.me{border-top-right-radius:0}.m.tail.me::before{right:-8px;clip-path:polygon(0 0,100% 0,0 100%)}
+.ft{display:flex;justify-content:flex-end;align-items:center;gap:3px;font-size:11px;color:var(--mut);margin-top:2px}
+.tk{width:17px;height:17px;color:#8aa0aa}.tk.rd{color:#34b7f1}
+.m.img{padding:3px}.m.img img{display:block;max-width:100%;border-radius:8px}.m.img .ft{padding:0 5px 2px}
+.sys,.day{align-self:center;font-size:12.5px;text-align:center;border-radius:8px;padding:5px 12px;box-shadow:0 1px .5px rgba(11,20,26,.15)}
+.day{background:var(--inn);color:var(--mut);text-transform:uppercase;font-size:11.5px}.sys{background:#fff3c4;color:#54470f;max-width:88%}
+.au{display:flex;align-items:center;gap:8px;min-width:220px}.pl{width:40px;height:40px;border-radius:50%;border:0;background:var(--acc);color:#fff;display:grid;place-items:center;cursor:pointer;flex:none}
+.wf{flex:1;height:28px;display:flex;align-items:center;gap:2px}.wf i{flex:1;background:rgba(128,140,148,.5);border-radius:2px;min-height:3px}.wf i.on{background:var(--acc)}.du{font-size:12px;color:var(--mut);min-width:32px}
+canvas{display:block;width:100%;max-width:300px;border-radius:8px;margin:4px 0}.m a{color:var(--acc);font-weight:600}
+#att{left:10px;bottom:68px;display:flex;gap:18px;padding:16px 20px}
+#att button{background:none;border:0;color:var(--tx);font:12px system-ui;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer}
+#att button span{width:50px;height:50px;border-radius:50%;display:grid;place-items:center;color:#fff}
+footer{position:relative;display:flex;align-items:flex-end;gap:7px;padding:6px 8px 8px;background:transparent}
+.pill{flex:1;min-width:0;display:flex;align-items:center;background:var(--pill);border-radius:26px;padding:2px 4px;box-shadow:0 1px 2px rgba(0,0,0,.18);min-height:48px}
+.pill .ib{color:var(--mut)}.pill .ib:active{background:rgba(128,128,128,.2)}
+#txt{flex:1;min-width:0;border:0;outline:0;background:none;color:var(--tx);font:inherit;font-size:16px;padding:10px 4px}
+#rb{flex:1;display:none;align-items:center;gap:10px;padding:0 14px;color:var(--mut)}#rb b{width:11px;height:11px;border-radius:50%;background:#e5393f;animation:bl 1s infinite}@keyframes bl{50%{opacity:.2}}
+.rec #rb{display:flex}.rec #txt,.rec .pill .ib{display:none}
+#act{width:50px;height:50px;border-radius:50%;border:0;color:#fff;cursor:pointer;display:grid;place-items:center;background:linear-gradient(145deg,#1fd1bd,#0c8f83);box-shadow:0 3px 8px rgba(0,0,0,.3);touch-action:none;user-select:none;transition:transform .15s}
+#act.snd .mic,#act:not(.snd) .sd{display:none}.rec #act{transform:scale(1.25);background:#e5393f}
+dialog{border:0;border-radius:16px;background:var(--pop);color:var(--tx);max-width:420px;width:92%;box-shadow:0 10px 40px rgba(0,0,0,.4)}dialog li{margin:7px 0}dialog button{font:inherit;padding:8px 14px;border:0;border-radius:10px;background:var(--acc);color:#fff;cursor:pointer;margin:4px 4px 0 0}
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></symbol>
+<symbol id="i-dots" viewBox="0 0 24 24"><path d="M12 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm0 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm0 6a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/></symbol>
+<symbol id="i-clip" viewBox="0 0 24 24"><path d="M16.5 6v11.5a4 4 0 0 1-8 0V5a2.5 2.5 0 0 1 5 0v10.5a1 1 0 0 1-2 0V6H10v9.5a2.5 2.5 0 0 0 5 0V5a4 4 0 0 0-8 0v12.5a5.5 5.5 0 0 0 11 0V6z"/></symbol>
+<symbol id="i-cam" viewBox="0 0 24 24"><path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4z"/><path d="M9 2 7.17 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3.17L15 2zm3 15a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/></symbol>
+<symbol id="i-img" viewBox="0 0 24 24"><path d="M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2zM8.5 13.5l2.5 3L14.5 12l4.5 6H5z"/></symbol>
+<symbol id="i-mic" viewBox="0 0 24 24"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72z"/></symbol>
+<symbol id="i-send" viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></symbol>
+<symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></symbol>
+<symbol id="i-pause" viewBox="0 0 24 24"><path d="M6 19h4V5H6zm8-14v14h4V5z"/></symbol>
+<symbol id="i-ticks" viewBox="0 0 24 24"><path d="M18 7l-1.41-1.41-6.34 6.34 1.41 1.41zm4.24-1.41L11.66 16.17 7.48 12l-1.41 1.41L11.66 19l12-12zM.41 13.41L6 19l1.41-1.41L1.83 12z"/></symbol>
+</defs></svg>
+
 <header>
-  <h1>Malla <span id="chip" class="chip">…</span></h1>
-  <div class="bar">
-    <select id="mode" aria-label="Modo">
-      <option value="auto">Auto (Internet → Bluetooth)</option>
-      <option value="net">Solo Internet</option>
-      <option value="bt">Solo Bluetooth</option>
-    </select>
-    <button id="test">🧪 Probar</button>
-    <button id="loc">📍 Ubicación en vivo</button>
+  <img class="av" src="data:image/webp;base64,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" alt="Malla">
+  <div class="ttl"><b>Malla · Grupo</b><small id="sub"></small></div>
+  <button class="ib" id="loc" title="Ubicación en vivo"><svg class="i"><use href="#i-pin"/></svg></button>
+  <button class="ib" id="menuB" title="Menú"><svg class="i"><use href="#i-dots"/></svg></button>
+  <div id="menu" hidden>
+    <button data-m="auto">Modo automático (Internet → Bluetooth)</button>
+    <button data-m="net">Solo Internet</button>
+    <button data-m="bt">Solo Bluetooth (malla)</button><hr>
+    <button id="test">Probar conexión</button>
   </div>
 </header>
-<div id="log"></div>
-<form id="f">
-  <button type="button" id="imgb" title="Enviar imagen">🖼️</button>
-  <input type="file" id="file" accept="image/*" hidden>
-  <input type="text" id="txt" placeholder="Escribe un mensaje…" autocomplete="off">
-  <button class="pri">Enviar</button>
-</form>
+
+<main>
+  <svg class="bg" aria-hidden="true"><defs><pattern id="pt" width="220" height="220" patternUnits="userSpaceOnUse"><g fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="translate(34 28) rotate(35)"><path stroke="#f08a3c" d="M-9 0Q0-6 9 0L1 44Q0 47-1 44Z"/><path stroke="#3fae6a" d="M0-2C-3-10-9-12-11-18M0-2C0-10 2-14 4-20M0-2C4-8 9-10 13-14"/></g>
+    <g transform="translate(150 42)"><circle r="15" stroke="#e5574f"/><path stroke="#3fae6a" d="M-8-13L0-8 8-13M0-8V-18"/></g>
+    <g transform="translate(98 122)" stroke="#3fae6a"><circle cx="-9" r="8"/><circle cx="9" r="8"/><circle cy="-9" r="8"/><path d="M-5 8V24H5V8"/></g>
+    <g transform="translate(176 134) rotate(-20)" stroke="#12a89a"><path d="M0 0C20-4 28-22 26-34 10-32-2-18 0 0ZM0 0L18-22"/></g>
+    <g transform="translate(26 162)"><path stroke="#e5574f" d="M0 0C14 2 22 18 40 22 30 30 8 28 0 10-3 4-2 1 0 0Z"/><path stroke="#3fae6a" d="M0 0L-6-6"/></g>
+    <g transform="translate(150 196)" stroke="#c98a5a"><path d="M-14 0C-14-14 14-14 14 0ZM-5 0V12H5V0"/></g>
+    <g stroke="#12a89a"><path d="M104 40v10M99 45h10M62 96l6 6M68 96l-6 6M206 196v8M202 200h8"/><circle cx="118" cy="190" r="3"/><circle cx="82" cy="62" r="2"/><circle cx="16" cy="112" r="2.5"/></g>
+  </g></pattern></defs><rect width="100%" height="100%" fill="url(#pt)"/></svg>
+  <div id="log"></div>
+</main>
+
+<div id="att" hidden>
+  <button data-a="gal"><span style="background:#7f66ff"><svg class="i"><use href="#i-img"/></svg></span>Galería</button>
+  <button data-a="cam"><span style="background:#ec407a"><svg class="i"><use href="#i-cam"/></svg></span>Cámara</button>
+  <button data-a="loc"><span style="background:#12a89a"><svg class="i"><use href="#i-pin"/></svg></span>Ubicación</button>
+</div>
+<footer id="ft">
+  <div class="pill">
+    <button class="ib" id="clip" title="Adjuntar"><svg class="i"><use href="#i-clip"/></svg></button>
+    <input id="txt" type="text" placeholder="Mensaje" autocomplete="off">
+    <div id="rb"><b></b><span id="rt">0:00</span><small>‹ desliza para cancelar</small></div>
+    <button class="ib" id="cam" title="Cámara"><svg class="i"><use href="#i-cam"/></svg></button>
+  </div>
+  <button id="act" aria-label="Enviar o grabar audio"><svg class="i mic"><use href="#i-mic"/></svg><svg class="i sd"><use href="#i-send"/></svg></button>
+</footer>
+<input type="file" id="file" accept="image/*" hidden>
 <dialog id="dlg"><b>Prueba de conexión</b><ul id="res"></ul><button id="close">Cerrar</button></dialog>
 
 <script>
-const $=s=>document.querySelector(s), log=$('#log');
-let watchId=null, locMsg=null;
+const $=s=>document.querySelector(s),log=$('#log'),ic=n=>`<svg class="i"><use href="#i-${n}"/></svg>`;
+let mode='auto',watchId=null,locMsg=null,lastMine=null;
+const tr=()=>mode==='net'?(navigator.onLine?'net':'off'):mode==='bt'?'bt':(navigator.onLine?'net':'bt');
+function refresh(){const t=tr();$('#sub').textContent=t==='net'?'en línea · vía Internet':t==='bt'?'malla Bluetooth · 2 vecinos (simulado)':'sin conexión';
+ document.querySelectorAll('#menu [data-m]').forEach(b=>b.classList.toggle('sel',b.dataset.m===mode))}
+const hm=()=>new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+const fmt=s=>Math.floor(s/60)+':'+String(Math.round(s%60)).padStart(2,'0');
+const lab=t=>t==='net'?'🌐':t==='bt'?'📶 '+(1+Math.floor(Math.random()*3))+' saltos':'⚠️';
+const txt=s=>{const p=document.createElement('div');p.textContent=s;return p};
+function sys(t,c='sys'){const d=document.createElement('div');d.className=c;d.textContent=t;log.append(d);log.scrollTop=log.scrollHeight}
+function add(me,node,t,x='',cls=''){
+ const d=document.createElement('div');d.className='m tail'+(me?' me':'')+cls;d.append(node);
+ const f=document.createElement('div');f.className='ft';f.innerHTML=`<span>${x}${lab(t)} ${hm()}</span>`+(me?ic('ticks').replace('class="i"','class="i tk"'):'');
+ d.append(f);log.append(d);log.scrollTop=log.scrollHeight;if(me)lastMine=d;return d}
+function reply(t,what){if(t==='off')return;const mine=lastMine;$('#sub').textContent='escribiendo…';
+ setTimeout(()=>{refresh();add(false,txt('Recibí tu '+what+' ✔'),t);mine&&mine.querySelector('.tk')&&mine.querySelector('.tk').classList.add('rd')},t==='bt'?1600:800)}
 
-function transport(){
-  const m=$('#mode').value;
-  if(m==='net')return navigator.onLine?'net':'off';
-  if(m==='bt')return 'bt';
-  return navigator.onLine?'net':'bt';
-}
-function refresh(){
-  const t=transport(), c=$('#chip');
-  c.className='chip '+t;
-  c.textContent=t==='net'?'🌐 Internet':t==='bt'?'📶 Bluetooth (malla)':'Sin conexión';
-}
 addEventListener('online',()=>{refresh();sys('Volvió Internet: se usa la red global.')});
 addEventListener('offline',()=>{refresh();sys('Sin Internet: se usa la malla Bluetooth.')});
-$('#mode').onchange=refresh;
+document.querySelectorAll('#menu [data-m]').forEach(b=>b.onclick=()=>{mode=b.dataset.m;refresh();$('#menu').hidden=true});
+$('#menuB').onclick=e=>{e.stopPropagation();$('#att').hidden=true;$('#menu').hidden=!$('#menu').hidden};
+$('#clip').onclick=e=>{e.stopPropagation();$('#menu').hidden=true;$('#att').hidden=!$('#att').hidden};
+document.addEventListener('click',()=>{$('#menu').hidden=$('#att').hidden=true});
 
-function sys(t){const d=document.createElement('div');d.className='m sys';d.textContent=t;log.append(d);log.scrollTop=log.scrollHeight}
-function badge(t,extra=''){const h=Math.floor(Math.random()*3)+1;return (t==='net'?'🌐 Internet':t==='bt'?'📶 Bluetooth · '+h+(h>1?' saltos':' salto'):'⚠️ sin ruta')+extra}
-function bubble(me,node,t,extra){
-  const d=document.createElement('div');d.className='m'+(me?' me':'');
-  d.append(node);
-  const m=document.createElement('div');m.className='meta';
-  m.textContent=(me?'Tú':'Nodo cercano (simulado)')+' · '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})+' · '+badge(t,extra);
-  d.append(m);log.append(d);log.scrollTop=log.scrollHeight;return d;
-}
-function txtNode(s){const p=document.createElement('div');p.textContent=s;return p}
-function reply(t,what){
-  if(t==='off')return;
-  setTimeout(()=>bubble(false,txtNode('Recibí tu '+what+' ✔'),t),t==='bt'?1400:600);
-}
+const inp=$('#txt'),act=$('#act');
+inp.oninput=()=>act.classList.toggle('snd',!!inp.value.trim());
+function sendTxt(){const v=inp.value.trim();if(!v)return;const t=tr();if(t==='off'){sys('No hay ruta: cambia el modo a Auto o Bluetooth.');return}
+ add(true,txt(v),t);inp.value='';act.classList.remove('snd');reply(t,'mensaje')}
+inp.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();sendTxt()}};
 
-$('#f').onsubmit=e=>{
-  e.preventDefault();
-  const v=$('#txt').value.trim();if(!v)return;
-  const t=transport();
-  if(t==='off'){sys('No hay ruta: cambia a Auto o Bluetooth.');return}
-  bubble(true,txtNode(v),t);$('#txt').value='';reply(t,'mensaje');
-};
+/* Imagen */
+const file=$('#file');
+function pick(cam){cam?file.setAttribute('capture','environment'):file.removeAttribute('capture');file.click()}
+$('#cam').onclick=()=>pick(true);
+file.onchange=e=>{const f=e.target.files[0];if(!f)return;const t=tr();if(t==='off'){sys('No hay ruta disponible.');return}
+ const max=t==='bt'?360:900,q=t==='bt'?.5:.8,img=new Image(),url=URL.createObjectURL(f);
+ img.onload=()=>{const k=Math.min(1,max/Math.max(img.width,img.height)),c=document.createElement('canvas');c.width=img.width*k;c.height=img.height*k;
+  c.getContext('2d').drawImage(img,0,0,c.width,c.height);const data=c.toDataURL('image/jpeg',q),kb=Math.round(data.length*.75/1024);
+  const el=new Image();el.src=data;el.alt='Imagen enviada';add(true,el,t,kb+' KB'+(t==='bt'?' · '+Math.ceil(kb*1024/180)+' frag. · ':' · '),' img');URL.revokeObjectURL(url);reply(t,'imagen')};
+ img.src=url;file.value=''};
 
-$('#imgb').onclick=()=>$('#file').click();
-$('#file').onchange=e=>{
-  const f=e.target.files[0];if(!f)return;
-  const t=transport();
-  if(t==='off'){sys('No hay ruta disponible.');return}
-  const max=t==='bt'?360:900, q=t==='bt'?0.5:0.8;
-  const img=new Image(), url=URL.createObjectURL(f);
-  img.onload=()=>{
-    const k=Math.min(1,max/Math.max(img.width,img.height));
-    const c=document.createElement('canvas');c.width=img.width*k;c.height=img.height*k;
-    c.getContext('2d').drawImage(img,0,0,c.width,c.height);
-    const data=c.toDataURL('image/jpeg',q), kb=Math.round(data.length*0.75/1024);
-    const el=new Image();el.src=data;el.alt='Imagen enviada';
-    const frag=t==='bt'?' · '+Math.ceil(kb*1024/180)+' fragmentos BLE':'';
-    bubble(true,el,t,' · '+kb+' KB'+frag);
-    URL.revokeObjectURL(url);reply(t,'imagen');
-  };
-  img.src=url;e.target.value='';
-};
+/* Audio */
+let rec,chunks,t0,tmr,stream,sx,canc=false;
+function audioNode(url,dur){const d=document.createElement('div');d.className='au';
+ d.innerHTML=`<button class="pl">${ic('play')}</button><div class="wf">${Array.from({length:26},()=>`<i style="height:${20+Math.random()*80}%"></i>`).join('')}</div><span class="du">${fmt(dur)}</span>`;
+ const a=new Audio(url),b=d.querySelector('.pl'),bs=[...d.querySelectorAll('i')];
+ b.onclick=()=>{if(a.paused){a.play();b.innerHTML=ic('pause')}else{a.pause();b.innerHTML=ic('play')}};
+ a.ontimeupdate=()=>{const D=isFinite(a.duration)?a.duration:dur,n=Math.floor(bs.length*a.currentTime/(D||1));bs.forEach((x,i)=>x.classList.toggle('on',i<n))};
+ a.onended=()=>{b.innerHTML=ic('play');bs.forEach(x=>x.classList.remove('on'))};return d}
+async function startRec(){
+ try{stream=await navigator.mediaDevices.getUserMedia({audio:true});rec=new MediaRecorder(stream)}catch(e){sys('No se pudo usar el micrófono: '+(e.message||e));return}
+ chunks=[];canc=false;rec.ondataavailable=e=>chunks.push(e.data);
+ rec.onstop=()=>{stream.getTracks().forEach(x=>x.stop());const dur=(Date.now()-t0)/1000;if(canc)return;if(dur<1){sys('Mantén presionado el micrófono para grabar');return}
+  const t=tr();if(t==='off'){sys('No hay ruta disponible.');return}const blob=new Blob(chunks,{type:rec.mimeType}),kb=Math.round(blob.size/1024);
+  add(true,audioNode(URL.createObjectURL(blob),dur),t,kb+' KB'+(t==='bt'?' · '+Math.ceil(blob.size/180)+' frag. · ':' · '));reply(t,'nota de voz')};
+ rec.start();t0=Date.now();$('#ft').classList.add('rec');$('#rt').textContent='0:00';tmr=setInterval(()=>$('#rt').textContent=fmt((Date.now()-t0)/1000),250)}
+function stopRec(){clearInterval(tmr);$('#ft').classList.remove('rec');$('#rb small').textContent='‹ desliza para cancelar';if(rec&&rec.state==='recording')rec.stop()}
+act.onpointerdown=e=>{if(inp.value.trim()){sendTxt();return}act.setPointerCapture(e.pointerId);sx=e.clientX;startRec()};
+act.onpointermove=e=>{if(rec&&rec.state==='recording'&&e.clientX<sx-90){canc=true;$('#rb small').textContent='Suelta para cancelar'}};
+act.onpointerup=act.onpointercancel=stopRec;
 
-function drawMap(cv,lat,lon){
-  const x=cv.getContext('2d'),w=cv.width=320,h=cv.height=160;
-  const cs=getComputedStyle(document.documentElement);
-  x.fillStyle=cs.getPropertyValue('--bg');x.fillRect(0,0,w,h);
-  x.strokeStyle=cs.getPropertyValue('--bd');x.lineWidth=1;
-  for(let i=0;i<=12;i++){x.beginPath();x.moveTo(i*w/12,0);x.lineTo(i*w/12,h);x.stroke()}
-  for(let j=0;j<=6;j++){x.beginPath();x.moveTo(0,j*h/6);x.lineTo(w,j*h/6);x.stroke()}
-  const px=(lon+180)/360*w, py=(90-lat)/180*h;
-  x.fillStyle='#e5484d';x.beginPath();x.arc(px,py,6,0,7);x.fill();
-  x.strokeStyle='#e5484d';x.beginPath();x.arc(px,py,12,0,7);x.stroke();
-}
-function locUpdate(p){
-  const {latitude:la,longitude:lo,accuracy:ac}=p.coords, t=transport();
-  if(!locMsg){
-    const box=document.createElement('div'), tx=document.createElement('div'), cv=document.createElement('canvas'), a=document.createElement('a');
-    a.target='_blank';a.rel='noopener';a.textContent='Abrir en OpenStreetMap';
-    box.append(tx,cv,a);box._p={tx,cv,a};
-    locMsg=bubble(true,box,t,' · ubicación en vivo');locMsg._box=box;
-  }
-  const {tx,cv,a}=locMsg._box._p;
-  tx.textContent='📍 '+la.toFixed(5)+', '+lo.toFixed(5)+' (±'+Math.round(ac)+' m)';
-  a.href='https://www.openstreetmap.org/?mlat='+la+'&mlon='+lo+'#map=16/'+la+'/'+lo;
-  drawMap(cv,la,lo);
-}
-$('#loc').onclick=()=>{
-  const b=$('#loc');
-  if(watchId!==null){navigator.geolocation.clearWatch(watchId);watchId=null;locMsg=null;b.classList.remove('on');sys('Ubicación en vivo detenida.');return}
-  if(!navigator.geolocation){sys('Este navegador no tiene geolocalización.');return}
-  if(transport()==='off'){sys('No hay ruta para compartir ubicación.');return}
-  watchId=navigator.geolocation.watchPosition(locUpdate,err=>{sys('No se pudo obtener la ubicación: '+err.message);navigator.geolocation.clearWatch(watchId);watchId=null;locMsg=null;b.classList.remove('on')},{enableHighAccuracy:true,maximumAge:2000});
-  b.classList.add('on');sys('Ubicación en vivo activada. Se actualiza mientras te mueves.');
-};
+/* Ubicación en vivo */
+function drawMap(cv,la,lo){const x=cv.getContext('2d'),w=cv.width=300,h=cv.height=150,cs=getComputedStyle(document.documentElement);
+ x.fillStyle=cs.getPropertyValue('--bg');x.fillRect(0,0,w,h);x.strokeStyle='rgba(18,168,154,.35)';
+ for(let i=0;i<=12;i++){x.beginPath();x.moveTo(i*w/12,0);x.lineTo(i*w/12,h);x.stroke()}
+ for(let j=0;j<=6;j++){x.beginPath();x.moveTo(0,j*h/6);x.lineTo(w,j*h/6);x.stroke()}
+ const px=(lo+180)/360*w,py=(90-la)/180*h;x.fillStyle='#e5393f';x.beginPath();x.arc(px,py,6,0,7);x.fill();x.strokeStyle='#e5393f';x.beginPath();x.arc(px,py,13,0,7);x.stroke()}
+function locUpdate(p){const {latitude:la,longitude:lo,accuracy:ac}=p.coords,t=tr();
+ if(!locMsg){const box=document.createElement('div'),tx=document.createElement('div'),cv=document.createElement('canvas'),a=document.createElement('a');
+  a.target='_blank';a.rel='noopener';a.textContent='Abrir en OpenStreetMap';box.append(tx,cv,a);box._p={tx,cv,a};locMsg=add(true,box,t,'📍 en vivo · ');locMsg._b=box}
+ const {tx,cv,a}=locMsg._b._p;tx.textContent='📍 '+la.toFixed(5)+', '+lo.toFixed(5)+' (±'+Math.round(ac)+' m)';
+ a.href='https://www.openstreetmap.org/?mlat='+la+'&mlon='+lo+'#map=16/'+la+'/'+lo;drawMap(cv,la,lo)}
+function toggleLoc(){const b=$('#loc');
+ if(watchId!==null){navigator.geolocation.clearWatch(watchId);watchId=null;locMsg=null;b.classList.remove('on');sys('Ubicación en vivo detenida.');return}
+ if(!navigator.geolocation){sys('Este navegador no tiene geolocalización.');return}if(tr()==='off'){sys('No hay ruta para compartir ubicación.');return}
+ watchId=navigator.geolocation.watchPosition(locUpdate,err=>{sys('No se pudo obtener la ubicación: '+err.message);navigator.geolocation.clearWatch(watchId);watchId=null;locMsg=null;b.classList.remove('on')},{enableHighAccuracy:true,maximumAge:2000});
+ b.classList.add('on');sys('Ubicación en vivo activada.')}
+$('#loc').onclick=toggleLoc;
+document.querySelectorAll('#att [data-a]').forEach(b=>b.onclick=()=>{const a=b.dataset.a;a==='loc'?toggleLoc():pick(a==='cam')});
 
-$('#test').onclick=async()=>{
-  const r=$('#res');r.innerHTML='';
-  const add=(ok,t)=>{const li=document.createElement('li');li.textContent=(ok?'✅ ':'❌ ')+t;r.append(li)};
-  $('#dlg').showModal();
-  add(navigator.onLine,'Internet: '+(navigator.onLine?'conectado':'sin conexión'));
-  const t0=performance.now();await new Promise(s=>setTimeout(s,80));
-  add(true,'Ciclo de envío/eco simulado: '+Math.round(performance.now()-t0)+' ms');
-  add(!!navigator.geolocation,'Geolocalización disponible');
-  try{
-    if(navigator.permissions){const p=await navigator.permissions.query({name:'geolocation'});add(p.state!=='denied','Permiso de ubicación: '+p.state)}
-  }catch(e){}
-  const hasBT=!!navigator.bluetooth;
-  add(hasBT,'Web Bluetooth: '+(hasBT?'disponible (solo escaneo/GATT cliente)':'no disponible en este navegador'));
-  if(hasBT){
-    const b=document.createElement('button');b.textContent='Buscar dispositivo Bluetooth';
-    b.onclick=async()=>{try{const d=await navigator.bluetooth.requestDevice({acceptAllDevices:true});add(true,'Dispositivo: '+(d.name||d.id))}catch(e){add(false,'Búsqueda: '+e.message)}};
-    r.append(b);
-  }
-  add(false,'Malla BLE real con saltos: requiere app nativa (aquí es simulada)');
-};
+/* Prueba */
+$('#test').onclick=async()=>{const r=$('#res');r.innerHTML='';const add2=(ok,t)=>{const li=document.createElement('li');li.textContent=(ok?'✅ ':'❌ ')+t;r.append(li)};
+ $('#menu').hidden=true;$('#dlg').showModal();add2(navigator.onLine,'Internet: '+(navigator.onLine?'conectado':'sin conexión'));
+ add2(!!navigator.geolocation,'Geolocalización disponible');add2(!!(navigator.mediaDevices&&window.MediaRecorder),'Micrófono / notas de voz disponibles');
+ try{if(navigator.permissions){const p=await navigator.permissions.query({name:'geolocation'});add2(p.state!=='denied','Permiso de ubicación: '+p.state)}}catch(e){}
+ const bt=!!navigator.bluetooth;add2(bt,'Web Bluetooth: '+(bt?'disponible (solo escaneo)':'no disponible en este navegador'));
+ if(bt){const b=document.createElement('button');b.textContent='Buscar dispositivo';b.onclick=async()=>{try{const d=await navigator.bluetooth.requestDevice({acceptAllDevices:true});add2(true,'Dispositivo: '+(d.name||d.id))}catch(e){add2(false,'Búsqueda: '+e.message)}};r.append(b)}
+ add2(false,'Malla BLE real con saltos: requiere app nativa (aquí es simulada)')};
 $('#close').onclick=()=>$('#dlg').close();
-refresh();
-sys('Prototipo: el «nodo cercano» es simulado. Cambia el modo para ver Internet vs. Bluetooth.');
+
+refresh();sys('Hoy','day');
+sys('Prototipo: el «vecino» es simulado. Mantén presionado el micrófono para grabar una nota de voz.');
+add(false,txt('¡Hola! Soy un nodo cercano 👋 Prueba texto, imagen, voz o ubicación.'),tr());
 </script>
 </body>
 </html>

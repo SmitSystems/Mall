@@ -17,7 +17,7 @@ app/                    ← app Flutter (Android/iOS/Web)
 Settings → Pages → Branch: main, carpeta /(root) → tu sitio queda en https://USUARIO.github.io/REPO/
 
 ## Iconos
-- Web/PWA: ya incluidos (icons/ y app/web/icons/).
+- Web/PWA: ya incluidos (icono 3D generado desde tu imagen) (icons/ y app/web/icons/).
 - Android/iOS: `cd app && flutter create . && dart run flutter_launcher_icons` los genera desde assets/icon/icon.png.
   (Las carpetas android/ e ios/ no vienen en el pack: las crea `flutter create .`.)
 
