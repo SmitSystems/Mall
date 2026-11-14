@@ -86,6 +86,8 @@ dialog input{width:100%;box-sizing:border-box;padding:10px;border-radius:10px;bo
     <button data-m="auto">Modo automático (Internet → Bluetooth)</button>
     <button data-m="net">Solo Internet</button>
     <button data-m="bt">Solo Bluetooth (malla)</button><hr>
+    <button id="snd">Sonidos: activados</button>
+    <button id="ntf">Activar notificaciones</button>
     <button id="grp">Grupo e invitación</button>
     <button id="inst" hidden>Instalar app</button>
     <button id="test">Probar conexión</button>
@@ -134,7 +136,7 @@ dialog input{width:100%;box-sizing:border-box;padding:10px;border-radius:10px;bo
 const $=s=>document.querySelector(s),log=$('#log'),ic=n=>`<svg class="i"><use href="#i-${n}"/></svg>`;
 let mode='auto',watchId=null,locMsg=null,lastMine=null;
 const tr=()=>mode==='net'?(navigator.onLine?'net':'off'):mode==='bt'?'bt':(navigator.onLine?'net':'bt');
-function refresh(){const t=tr();$('#sub').textContent=window.Malla&&Malla.on?'Grupo '+Malla.pin+' · en línea':t==='net'?'en línea · vía Internet':t==='bt'?'malla Bluetooth · 2 vecinos (simulado)':'sin conexión';
+function refresh(){const t=tr();$('#sub').textContent=window.Malla&&Malla.on?(Malla.typ||'Grupo '+Malla.pin+' · en línea'):t==='net'?'en línea · vía Internet':t==='bt'?'malla Bluetooth · 2 vecinos (simulado)':'sin conexión';
  document.querySelectorAll('#menu [data-m]').forEach(b=>b.classList.toggle('sel',b.dataset.m===mode))}
 const hm=()=>(window._ts||new Date()).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
 const fmt=s=>Math.floor(s/60)+':'+String(Math.round(s%60)).padStart(2,'0');
@@ -188,8 +190,8 @@ async function startRec(){
   if(window.Malla&&Malla.on){const fr=new FileReader();fr.onload=()=>Malla.send({aud:fr.result,dur});fr.readAsDataURL(new Blob(chunks,{type:rec.mimeType}));return}
   const t=tr();if(t==='off'){sys('No hay ruta disponible.');return}const blob=new Blob(chunks,{type:rec.mimeType}),kb=Math.round(blob.size/1024);
   add(true,audioNode(URL.createObjectURL(blob),dur),t,kb+' KB'+(t==='bt'?' · '+Math.ceil(blob.size/180)+' frag. · ':' · '));reply(t,'nota de voz')};
- rec.start();t0=Date.now();$('#ft').classList.add('rec');$('#rt').textContent='0:00';tmr=setInterval(()=>{$('#rt').textContent=fmt((Date.now()-t0)/1000);if(Date.now()-t0>=60000)stopRec()},250)}
-function stopRec(){clearInterval(tmr);$('#ft').classList.remove('rec');$('#rb small').textContent='‹ desliza para cancelar';if(rec&&rec.state==='recording')rec.stop()}
+ rec.start();window.Malla&&Malla.ping&&Malla.ping('grabando audio…');t0=Date.now();$('#ft').classList.add('rec');$('#rt').textContent='0:00';tmr=setInterval(()=>{$('#rt').textContent=fmt((Date.now()-t0)/1000);if(Date.now()-t0>=60000)stopRec()},250)}
+function stopRec(){window.Malla&&Malla.ping&&Malla.ping('');clearInterval(tmr);$('#ft').classList.remove('rec');$('#rb small').textContent='‹ desliza para cancelar';if(rec&&rec.state==='recording')rec.stop()}
 act.onpointerdown=e=>{if(inp.value.trim()){sendTxt();return}act.setPointerCapture(e.pointerId);sx=e.clientX;startRec()};
 act.onpointermove=e=>{if(rec&&rec.state==='recording'&&e.clientX<sx-90){canc=true;$('#rb small').textContent='Suelta para cancelar'}};
 act.onpointerup=act.onpointercancel=stopRec;
@@ -234,6 +236,7 @@ add(false,txt('¡Hola! Soy un nodo cercano 👋 Prueba texto, imagen, voz o ubic
 <script type="module">
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
 import {getAuth,signInAnonymously,onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
+import {getMessaging,getToken,isSupported} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js';
 import {getFirestore,doc,getDoc,setDoc,updateDoc,collection,addDoc,query,orderBy,limit,onSnapshot,serverTimestamp} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
 const app=initializeApp({apiKey:"AIzaSyAxdteL5q9feZjsfQhiy7m4A7SHVav3kGw",authDomain:"malla-chat.firebaseapp.com",projectId:"malla-chat",storageBucket:"malla-chat.firebasestorage.app",messagingSenderId:"787737823006",appId:"1:787737823006:web:4b9ef8d39e4eda00ce6b0f"});
 const auth=getAuth(app),db=getFirestore(app),M=window.Malla={on:false,pin:null,owner:false},q=s=>document.querySelector(s);
@@ -244,7 +247,7 @@ const gm=t=>q('#gm').textContent=t,gd=q('#gd');
 function ui(){q('#g1').hidden=!M.pin;q('#gi').textContent=M.pin||'';list()}
 const gen=()=>{const a='ABCDEFGHJKMNPQRSTUVWXYZ23456789',r=crypto.getRandomValues(new Uint8Array(6));return [...r].map(x=>a[x%a.length]).join('')};
 function nm(){name=q('#gn').value.trim();if(!name){gm('Escribe tu nombre primero');return ''}localStorage.setItem('malla_name',name);return name}
-function leave(keep){M.live&&M.liveStop();un.forEach(f=>f());Object.keys(nodes).forEach(k=>delete nodes[k]);setTitle('Malla · Grupo');un=[];seen.clear();M.on=false;M.pin=null;if(!keep)localStorage.removeItem('malla_room');refresh();ui()}
+function leave(keep){M.typ='';M.live&&M.liveStop();un.forEach(f=>f());Object.keys(nodes).forEach(k=>delete nodes[k]);setTitle('Malla · Grupo');un=[];seen.clear();M.on=false;M.pin=null;if(!keep)localStorage.removeItem('malla_room');refresh();ui()}
 const nodes={},sig=d=>JSON.stringify([d.deleted,d.loc]),hid=()=>JSON.parse(localStorage.getItem('malla_hide_'+M.pin)||'[]');
 function body(d,n){n.innerHTML='';
  if(d.deleted){const i=document.createElement('i');i.textContent='Mensaje eliminado';i.style.opacity='.7';n.append(i);return}
@@ -258,9 +261,11 @@ function render(d,id){if(hid().includes(id))return;const me=d.uid===uid,n=docume
  n.append(c);body(d,c);window._ts=d.ts&&d.ts.toDate?d.ts.toDate():new Date();const m=add(me,n,'net');window._ts=null;
  m.dataset.id=id;m.dataset.me=me?'1':'';nodes[id]={m,c,s:sig(d)};const k=m.querySelector('.tk');k&&k.classList.add('rd')}
 function upd(d,id){const o=nodes[id];if(o&&o.s!==sig(d)){o.s=sig(d);body(d,o.c)}}
-function start(){M.on=true;log.innerHTML='';sys('Grupo '+M.pin+' conectado. Los mensajes llegan en tiempo real.');refresh();ui();
- un.push(onSnapshot(query(collection(db,'rooms',M.pin,'messages'),orderBy('ts'),limit(200)),s=>{
-  s.docChanges().forEach(c=>{const d=c.doc.data({serverTimestamps:'estimate'});if(c.type==='added'&&!seen.has(c.doc.id)){seen.add(c.doc.id);render(d,c.doc.id)}else if(c.type==='modified')upd(d,c.doc.id)})},e=>sys('Error leyendo mensajes: '+e.code)))}
+function start(){M.on=true;regPush();log.innerHTML='';sys('Grupo '+M.pin+' conectado. Los mensajes llegan en tiempo real.');refresh();ui();
+ let f=true,g=true;un.push(onSnapshot(collection(db,'rooms',M.pin,'typing'),s=>{const w=!g;g=false;if(!w)return;s.docChanges().forEach(c=>{if(c.doc.id===uid)return;const d=c.doc.data();clearTimeout(tt[c.doc.id]);
+  if(d.on){M.typ=d.name+' está '+d.what;tt[c.doc.id]=setTimeout(()=>{M.typ='';refresh()},5000)}else M.typ='';refresh()})},()=>{}));
+ un.push(onSnapshot(query(collection(db,'rooms',M.pin,'messages'),orderBy('ts'),limit(200)),s=>{const live=!f;f=false;
+  s.docChanges().forEach(c=>{const d=c.doc.data({serverTimestamps:'estimate'});if(c.type==='added'&&!seen.has(c.doc.id)){seen.add(c.doc.id);render(d,c.doc.id);if(live&&d.uid!==uid&&!hid().includes(c.doc.id)){M.typ='';notify(d)}}else if(c.type==='modified')upd(d,c.doc.id)})},e=>sys('Error leyendo mensajes: '+e.code)))}
 function ask(id,n){const d=document.createElement('div');d.className='sys';d.textContent=n+' quiere entrar al grupo ';
  [['Aceptar','accepted'],['Rechazar','rejected']].forEach(([l,st])=>{const b=document.createElement('button');b.textContent=l;
   b.style.cssText='margin:6px 4px 0;padding:6px 12px;border:0;border-radius:8px;background:#12a89a;color:#fff;font:inherit';
@@ -279,13 +284,39 @@ q('#gs').onclick=async()=>{const u=location.origin+location.pathname+'?pin='+M.p
  try{if(navigator.share)await navigator.share({text:t});else{await navigator.clipboard.writeText(t);gm('Invitación copiada')}}catch(e){}};
 q('#gl').onclick=()=>{setRooms(rooms().filter(r=>r.pin!==M.pin));leave();gm('Saliste del grupo');ui()};q('#gx').onclick=()=>gd.close();
 q('#grp').onclick=()=>{q('#menu').hidden=true;q('#gn').value=name;gm('');ui();gd.showModal()};
-M.send=async p=>{if(p.aud&&p.aud.length>900000){sys('Audio demasiado largo');return}
+M.send=async p=>{M.ping('');if(p.aud&&p.aud.length>900000){sys('Audio demasiado largo');return}
  if(p.img&&p.img.length>900000){sys('Imagen demasiado grande');return}
  try{await addDoc(collection(db,'rooms',M.pin,'messages'),{uid,name,ts:serverTimestamp(),...p})}catch(e){sys('No se pudo enviar: '+e.code)}};
 const rooms=()=>JSON.parse(localStorage.getItem('malla_rooms')||'[]'),setRooms=a=>localStorage.setItem('malla_rooms',JSON.stringify(a)),setTitle=t=>q('.ttl b').textContent=t;
 function remember(pin,owner,title){setRooms([{pin,owner,title},...rooms().filter(r=>r.pin!==pin)])}
 function list(){const el=q('#gr');el.innerHTML='';rooms().forEach(r=>{const b=document.createElement('button');b.textContent=r.title+' · '+r.pin+(r.pin===M.pin?' (abierto)':'');b.onclick=()=>{gd.close();enter(r.pin,r.owner,r.title)};el.append(b)})}
 q('#gt').onclick=()=>{const t=(prompt('Nombre del chat',q('.ttl b').textContent)||'').trim().slice(0,30);if(t){remember(M.pin,M.owner,t);setTitle(t);list()}};
+/* push con la app cerrada (FCM) */
+const VAPID='PEGA_AQUI_LA_CLAVE_VAPID';
+async function regPush(){try{if(!M.pin||!M.on||!('Notification' in window)||Notification.permission!=='granted'||VAPID.startsWith('PEGA')||!(await isSupported()))return;
+ const reg=await navigator.serviceWorker.ready,tk=await getToken(getMessaging(app),{vapidKey:VAPID,serviceWorkerRegistration:reg});
+ if(tk)await setDoc(doc(db,'rooms',M.pin,'tokens',uid),{t:tk,name,n:Date.now()})}catch(e){console.warn('push',e)}}
+/* sonidos, notificaciones y "escribiendo" */
+const tt={};let ac,snd=localStorage.getItem('malla_snd')!=='0',lastP=0,pOn=false;
+const AC=window.AudioContext||window.webkitAudioContext,lbl=()=>{q('#snd').textContent='Sonidos: '+(snd?'activados':'silenciados');
+ q('#ntf').textContent=!('Notification' in window)?'Notificaciones no disponibles':Notification.permission==='granted'?'Notificaciones: activadas':Notification.permission==='denied'?'Notificaciones: bloqueadas':'Activar notificaciones'};
+addEventListener('pointerdown',()=>{try{ac=ac||new AC();ac.resume()}catch(e){}},{once:true});
+function beep(){try{ac=ac||new AC();ac.resume();const t=ac.currentTime;[[880,0],[1175,.13]].forEach(([f,o])=>{const os=ac.createOscillator(),g=ac.createGain();os.type='sine';os.frequency.value=f;
+ g.gain.setValueAtTime(.0001,t+o);g.gain.exponentialRampToValueAtTime(.25,t+o+.02);g.gain.exponentialRampToValueAtTime(.0001,t+o+.22);os.connect(g);g.connect(ac.destination);os.start(t+o);os.stop(t+o+.25)})}catch(e){}}
+function showN(title,body){const o={body,icon:'icons/icon-192.png',badge:'icons/icon-192.png',tag:'malla-'+M.pin,renotify:true,vibrate:[120,60,120]};
+ navigator.serviceWorker&&navigator.serviceWorker.getRegistration().then(r=>r?r.showNotification(title,o):new Notification(title,o)).catch(()=>{})}
+function notify(d){if(snd)beep();
+ if(document.hidden){navigator.vibrate&&navigator.vibrate(150);
+  if('Notification' in window&&Notification.permission==='granted')showN((d.name||'Malla')+' · '+q('.ttl b').textContent,d.text||(d.aud?'🎤 Nota de voz':d.img?'📷 Foto':d.loc?'📍 Ubicación':'Nuevo mensaje'))}}
+const askN=()=>{if('Notification' in window&&Notification.permission==='default')Notification.requestPermission().then(()=>{lbl();regPush()})};
+q('#snd').onclick=()=>{snd=!snd;localStorage.setItem('malla_snd',snd?'1':'0');lbl();if(snd)beep()};
+q('#ntf').onclick=async()=>{if(!('Notification' in window)){sys('Este navegador no permite notificaciones. En iPhone instala la app desde Safari («Añadir a pantalla de inicio»).');return}
+ if(Notification.permission==='denied'){sys('Las notificaciones están bloqueadas. Actívalas en los ajustes del navegador para este sitio.');return}
+ if(Notification.permission==='default')await Notification.requestPermission();lbl();regPush();if(Notification.permission==='granted'){beep();showN('Malla','Notificaciones activadas ✔')}};
+q('#gc').addEventListener('click',askN);q('#gj').addEventListener('click',askN);lbl();
+M.ping=async w=>{if(!M.on||!M.pin)return;const n=Date.now();if(w&&n-lastP<2500)return;if(!w&&!pOn)return;lastP=n;pOn=!!w;
+ try{await setDoc(doc(db,'rooms',M.pin,'typing',uid),{name,on:!!w,what:w||'',n})}catch(e){}};
+q('#txt').addEventListener('input',()=>M.ping(q('#txt').value.trim()?'escribiendo…':''));q('#txt').addEventListener('blur',()=>M.ping(''));
 /* borrar */
 const dd=q('#dd');let cur=null,lp;
 function del(m){if(dd.open)return;cur=m;q('#da').hidden=!m.dataset.me;dd.showModal()}

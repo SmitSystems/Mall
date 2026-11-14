@@ -27,6 +27,14 @@ service cloud.firestore {
         allow update: if isMember() && resource.data.uid == request.auth.uid
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['deleted','text','img','aud','loc']);
       }
+      match /typing/{uid} {
+        allow read: if isMember();
+        allow write: if isMember() && request.auth.uid == uid;
+      }
+      match /tokens/{uid} {
+        allow write: if isMember() && request.auth.uid == uid;
+        allow read: if false;
+      }
     }
   }
 }
