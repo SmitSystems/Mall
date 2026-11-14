@@ -4,6 +4,7 @@
 ```
 index.html            prototipo web (GitHub Pages)
 manifest.webmanifest  datos de instalación (nombre, colores, iconos)
+firestore.rules       reglas de seguridad (pegar en Firebase → Firestore → Reglas → Publicar)
 sw.js                 service worker: instalable y abre sin Internet
 icons/                icon-192, icon-512, icon-maskable-512, apple-touch-icon, favicon
 .nojekyll  .gitignore (archivos que empiezan con punto)
@@ -32,7 +33,7 @@ Genera los iconos de lanzador de Android (con versión adaptable) e iOS desde as
 3. `flutter run --dart-define=WS_URL=ws://TU_IP:8080`
 
 ## Estado honesto
-- index.html ahora usa Firebase (proyecto malla-chat): grupo con PIN de invitación, aceptar/rechazar y mensajes de texto e imagen en tiempo real. Notas de voz y ubicación siguen solo en local.
+- index.html ahora usa Firebase (proyecto malla-chat): grupo con PIN de invitación, aceptar/rechazar y mensajes de texto e imagen en tiempo real. También: notas de voz (hasta 60 s), ubicación actual y en vivo (1 h, solo con la app abierta), borrar mensajes (para mí / para todos con pulsación larga) y lista de chats guardada en el dispositivo.
 - Requiere en Firebase: Authentication → Anónimo habilitado, Firestore creado con las reglas publicadas y el dominio de GitHub Pages autorizado.
 - La app Flutter no fue compilada ni probada. `lib/transports/ble_radio.dart` es un stub (sin Bluetooth real).
 - Sin cifrado, cuentas ni salas privadas.

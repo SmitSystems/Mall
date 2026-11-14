@@ -61,6 +61,7 @@ footer{position:relative;display:flex;align-items:flex-end;gap:7px;padding:6px 8
 #act.snd .mic,#act:not(.snd) .sd{display:none}.rec #act{transform:scale(1.25);background:#e5393f}
 dialog{border:0;border-radius:16px;background:var(--pop);color:var(--tx);max-width:420px;width:92%;box-shadow:0 10px 40px rgba(0,0,0,.4)}dialog li{margin:7px 0}dialog button{font:inherit;padding:8px 14px;border:0;border-radius:10px;background:var(--acc);color:#fff;cursor:pointer;margin:4px 4px 0 0}
 dialog input{width:100%;box-sizing:border-box;padding:10px;border-radius:10px;border:1px solid rgba(128,128,128,.4);background:var(--inn);color:var(--tx);font:inherit;margin:4px 0}
+#gr button{display:block;text-align:left}
 </style>
 </head>
 <body>
@@ -121,11 +122,12 @@ dialog input{width:100%;box-sizing:border-box;padding:10px;border-radius:10px;bo
 </footer>
 <input type="file" id="file" accept="image/*" hidden>
 <dialog id="gd"><b>Grupo de Malla</b>
-<div id="g0"><p>Tu nombre</p><input id="gn" maxlength="20" placeholder="Ej: Smit">
+<div id="g0"><p><b>Mis chats</b></p><div id="gr"></div><p>Tu nombre</p><input id="gn" maxlength="20" placeholder="Ej: Smit">
 <p><button id="gc">Crear grupo nuevo</button></p><p>o entra con un PIN</p>
 <input id="gp" maxlength="6" placeholder="PIN de 6 caracteres" style="text-transform:uppercase"><button id="gj">Unirme</button></div>
-<div id="g1" hidden><p>PIN del grupo: <b id="gi" style="font-size:22px;letter-spacing:3px"></b></p><button id="gs">Compartir invitación</button><button id="gl" style="background:#c0392b">Salir del grupo</button></div>
+<div id="g1" hidden><p>PIN del grupo: <b id="gi" style="font-size:22px;letter-spacing:3px"></b></p><button id="gs">Compartir invitación</button><button id="gt">Cambiar nombre del chat</button><button id="gl" style="background:#c0392b">Salir del grupo</button></div>
 <p id="gm" style="color:var(--mut);font-size:13px;min-height:1em"></p><button id="gx">Cerrar</button></dialog>
+<dialog id="dd"><b>¿Eliminar mensaje?</b><p><button id="da">Eliminar para todos</button></p><p><button id="dm">Eliminar para mí</button></p><button id="dc">Cancelar</button></dialog>
 <dialog id="dlg"><b>Prueba de conexión</b><ul id="res"></ul><button id="close">Cerrar</button></dialog>
 
 <script>
@@ -180,13 +182,13 @@ function audioNode(url,dur){const d=document.createElement('div');d.className='a
  a.ontimeupdate=()=>{const D=isFinite(a.duration)?a.duration:dur,n=Math.floor(bs.length*a.currentTime/(D||1));bs.forEach((x,i)=>x.classList.toggle('on',i<n))};
  a.onended=()=>{b.innerHTML=ic('play');bs.forEach(x=>x.classList.remove('on'))};return d}
 async function startRec(){
- if(window.Malla&&Malla.on){sys('Notas de voz: por ahora solo en modo local.');return}
- try{stream=await navigator.mediaDevices.getUserMedia({audio:true});rec=new MediaRecorder(stream)}catch(e){sys('No se pudo usar el micrófono: '+(e.message||e));return}
+ try{stream=await navigator.mediaDevices.getUserMedia({audio:true});rec=new MediaRecorder(stream,{audioBitsPerSecond:24000})}catch(e){sys('No se pudo usar el micrófono: '+(e.message||e));return}
  chunks=[];canc=false;rec.ondataavailable=e=>chunks.push(e.data);
  rec.onstop=()=>{stream.getTracks().forEach(x=>x.stop());const dur=(Date.now()-t0)/1000;if(canc)return;if(dur<1){sys('Mantén presionado el micrófono para grabar');return}
+  if(window.Malla&&Malla.on){const fr=new FileReader();fr.onload=()=>Malla.send({aud:fr.result,dur});fr.readAsDataURL(new Blob(chunks,{type:rec.mimeType}));return}
   const t=tr();if(t==='off'){sys('No hay ruta disponible.');return}const blob=new Blob(chunks,{type:rec.mimeType}),kb=Math.round(blob.size/1024);
   add(true,audioNode(URL.createObjectURL(blob),dur),t,kb+' KB'+(t==='bt'?' · '+Math.ceil(blob.size/180)+' frag. · ':' · '));reply(t,'nota de voz')};
- rec.start();t0=Date.now();$('#ft').classList.add('rec');$('#rt').textContent='0:00';tmr=setInterval(()=>$('#rt').textContent=fmt((Date.now()-t0)/1000),250)}
+ rec.start();t0=Date.now();$('#ft').classList.add('rec');$('#rt').textContent='0:00';tmr=setInterval(()=>{$('#rt').textContent=fmt((Date.now()-t0)/1000);if(Date.now()-t0>=60000)stopRec()},250)}
 function stopRec(){clearInterval(tmr);$('#ft').classList.remove('rec');$('#rb small').textContent='‹ desliza para cancelar';if(rec&&rec.state==='recording')rec.stop()}
 act.onpointerdown=e=>{if(inp.value.trim()){sendTxt();return}act.setPointerCapture(e.pointerId);sx=e.clientX;startRec()};
 act.onpointermove=e=>{if(rec&&rec.state==='recording'&&e.clientX<sx-90){canc=true;$('#rb small').textContent='Suelta para cancelar'}};
@@ -204,7 +206,7 @@ function locUpdate(p){const {latitude:la,longitude:lo,accuracy:ac}=p.coords,t=tr
  const {tx,cv,a}=locMsg._b._p;tx.textContent='📍 '+la.toFixed(5)+', '+lo.toFixed(5)+' (±'+Math.round(ac)+' m)';
  a.href='https://www.openstreetmap.org/?mlat='+la+'&mlon='+lo+'#map=16/'+la+'/'+lo;drawMap(cv,la,lo)}
 function toggleLoc(){const b=$('#lv');
- if(window.Malla&&Malla.on&&watchId===null){sys('Ubicación: por ahora solo en modo local.');return}
+ if(window.Malla&&Malla.on&&watchId===null){Malla.live?Malla.liveStop():Malla.liveStart();return}
  if(watchId!==null){navigator.geolocation.clearWatch(watchId);watchId=null;locMsg=null;b.hidden=true;sys('Ubicación en vivo detenida.');return}
  if(!navigator.geolocation){sys('Este navegador no tiene geolocalización.');return}if(tr()==='off'){sys('No hay ruta para compartir ubicación.');return}
  watchId=navigator.geolocation.watchPosition(locUpdate,err=>{sys('No se pudo obtener la ubicación: '+err.message);navigator.geolocation.clearWatch(watchId);watchId=null;locMsg=null;b.hidden=true},{enableHighAccuracy:true,maximumAge:2000});
@@ -239,25 +241,32 @@ let uid=null,name=localStorage.getItem('malla_name')||'',un=[],seen=new Set();
 const ready=new Promise(r=>onAuthStateChanged(auth,u=>{if(u){uid=u.uid;r()}}));
 signInAnonymously(auth).catch(e=>gm('No se pudo iniciar sesión ('+e.code+'). Revisa que Anónimo esté habilitado.'));
 const gm=t=>q('#gm').textContent=t,gd=q('#gd');
-function ui(){q('#g0').hidden=!!M.pin;q('#g1').hidden=!M.pin;q('#gi').textContent=M.pin||''}
+function ui(){q('#g1').hidden=!M.pin;q('#gi').textContent=M.pin||'';list()}
 const gen=()=>{const a='ABCDEFGHJKMNPQRSTUVWXYZ23456789',r=crypto.getRandomValues(new Uint8Array(6));return [...r].map(x=>a[x%a.length]).join('')};
 function nm(){name=q('#gn').value.trim();if(!name){gm('Escribe tu nombre primero');return ''}localStorage.setItem('malla_name',name);return name}
-function leave(keep){un.forEach(f=>f());un=[];seen.clear();M.on=false;M.pin=null;if(!keep)localStorage.removeItem('malla_room');refresh();ui()}
-function render(d){const me=d.uid===uid,n=document.createElement('div');
- if(!me){const b=document.createElement('b');b.textContent=d.name||'?';b.style.cssText='display:block;font-size:12.5px;color:var(--acc)';n.append(b)}
+function leave(keep){M.live&&M.liveStop();un.forEach(f=>f());Object.keys(nodes).forEach(k=>delete nodes[k]);setTitle('Malla · Grupo');un=[];seen.clear();M.on=false;M.pin=null;if(!keep)localStorage.removeItem('malla_room');refresh();ui()}
+const nodes={},sig=d=>JSON.stringify([d.deleted,d.loc]),hid=()=>JSON.parse(localStorage.getItem('malla_hide_'+M.pin)||'[]');
+function body(d,n){n.innerHTML='';
+ if(d.deleted){const i=document.createElement('i');i.textContent='Mensaje eliminado';i.style.opacity='.7';n.append(i);return}
  if(d.text)n.append(txt(d.text));
  if(d.img){const i=new Image();i.src=d.img;i.alt='Imagen';i.style.maxWidth='100%';n.append(i)}
- window._ts=d.ts&&d.ts.toDate?d.ts.toDate():new Date();const m=add(me,n,'net');window._ts=null;
- const k=m.querySelector('.tk');k&&k.classList.add('rd')}
+ if(d.aud)n.append(audioNode(d.aud,d.dur||0));
+ if(d.loc){const L=d.loc,t=document.createElement('div'),cv=document.createElement('canvas'),a=document.createElement('a');a.target='_blank';a.rel='noopener';a.textContent='Abrir en OpenStreetMap';
+  t.textContent='📍 '+(L.live?'en vivo · ':'')+L.la.toFixed(5)+', '+L.lo.toFixed(5);a.href='https://www.openstreetmap.org/?mlat='+L.la+'&mlon='+L.lo+'#map=16/'+L.la+'/'+L.lo;n.append(t,cv,a);drawMap(cv,L.la,L.lo)}}
+function render(d,id){if(hid().includes(id))return;const me=d.uid===uid,n=document.createElement('div'),c=document.createElement('div');
+ if(!me){const b=document.createElement('b');b.textContent=d.name||'?';b.style.cssText='display:block;font-size:12.5px;color:var(--acc)';n.append(b)}
+ n.append(c);body(d,c);window._ts=d.ts&&d.ts.toDate?d.ts.toDate():new Date();const m=add(me,n,'net');window._ts=null;
+ m.dataset.id=id;m.dataset.me=me?'1':'';nodes[id]={m,c,s:sig(d)};const k=m.querySelector('.tk');k&&k.classList.add('rd')}
+function upd(d,id){const o=nodes[id];if(o&&o.s!==sig(d)){o.s=sig(d);body(d,o.c)}}
 function start(){M.on=true;log.innerHTML='';sys('Grupo '+M.pin+' conectado. Los mensajes llegan en tiempo real.');refresh();ui();
  un.push(onSnapshot(query(collection(db,'rooms',M.pin,'messages'),orderBy('ts'),limit(200)),s=>{
-  s.docChanges().forEach(c=>{if(c.type!=='added'||seen.has(c.doc.id))return;seen.add(c.doc.id);render(c.doc.data({serverTimestamps:'estimate'}))})},e=>sys('Error leyendo mensajes: '+e.code)))}
+  s.docChanges().forEach(c=>{const d=c.doc.data({serverTimestamps:'estimate'});if(c.type==='added'&&!seen.has(c.doc.id)){seen.add(c.doc.id);render(d,c.doc.id)}else if(c.type==='modified')upd(d,c.doc.id)})},e=>sys('Error leyendo mensajes: '+e.code)))}
 function ask(id,n){const d=document.createElement('div');d.className='sys';d.textContent=n+' quiere entrar al grupo ';
  [['Aceptar','accepted'],['Rechazar','rejected']].forEach(([l,st])=>{const b=document.createElement('button');b.textContent=l;
   b.style.cssText='margin:6px 4px 0;padding:6px 12px;border:0;border-radius:8px;background:#12a89a;color:#fff;font:inherit';
   b.onclick=async()=>{try{await updateDoc(doc(db,'rooms',M.pin,'requests',id),{status:st});d.remove();sys(n+(st==='accepted'?' ya puede chatear':' fue rechazado'))}catch(e){sys('Error: '+e.code)}};d.append(b)});
  log.append(d);log.scrollTop=log.scrollHeight}
-function enter(pin,owner){leave(true);M.pin=pin;M.owner=owner;localStorage.setItem('malla_room',JSON.stringify({pin,owner}));ui();
+function enter(pin,owner,title){leave(true);M.pin=pin;M.owner=owner;title=title||(rooms().find(r=>r.pin===pin)||{}).title||'Mi grupo';remember(pin,owner,title);localStorage.setItem('malla_room',pin);setTitle(title);ui();
  if(owner){start();un.push(onSnapshot(collection(db,'rooms',pin,'requests'),s=>s.docChanges().forEach(c=>{const d=c.doc.data();if(c.type!=='removed'&&d.status==='pending')ask(c.doc.id,d.name)}),e=>sys('Error: '+e.code)))}
  else un.push(onSnapshot(doc(db,'rooms',pin,'requests',uid),s=>{const st=s.data()&&s.data().status;
   if(st==='accepted'){if(!M.on){gd.close();start()}}else if(st==='rejected'){gm('El anfitrión rechazó tu solicitud.');leave()}else gm('Esperando que el anfitrión te acepte…')},e=>gm('Error: '+e.code)))}
@@ -265,16 +274,45 @@ q('#gc').onclick=async()=>{try{await ready;if(!nm())return;let pin;do{pin=gen()}
  await setDoc(doc(db,'rooms',pin),{owner:uid,ownerName:name,createdAt:serverTimestamp()});enter(pin,true);gm('Listo. Comparte la invitación.')}catch(e){gm('Error: '+(e.code||e.message))}};
 q('#gj').onclick=async()=>{try{await ready;if(!nm())return;const pin=q('#gp').value.trim().toUpperCase(),r=await getDoc(doc(db,'rooms',pin));
  if(!r.exists()){gm('Ese PIN no existe');return}if(r.data().owner===uid){enter(pin,true);return}
- const rq=doc(db,'rooms',pin,'requests',uid);if(!(await getDoc(rq)).exists())await setDoc(rq,{name,status:'pending',ts:serverTimestamp()});enter(pin,false)}catch(e){gm('Error: '+(e.code||e.message))}};
+ const rq=doc(db,'rooms',pin,'requests',uid);if(!(await getDoc(rq)).exists())await setDoc(rq,{name,status:'pending',ts:serverTimestamp()});enter(pin,false,r.data().ownerName||'Chat')}catch(e){gm('Error: '+(e.code||e.message))}};
 q('#gs').onclick=async()=>{const u=location.origin+location.pathname+'?pin='+M.pin,t='Únete a mi chat en Malla. PIN: '+M.pin+'\n'+u;
  try{if(navigator.share)await navigator.share({text:t});else{await navigator.clipboard.writeText(t);gm('Invitación copiada')}}catch(e){}};
-q('#gl').onclick=()=>{leave();gm('Saliste del grupo')};q('#gx').onclick=()=>gd.close();
+q('#gl').onclick=()=>{setRooms(rooms().filter(r=>r.pin!==M.pin));leave();gm('Saliste del grupo');ui()};q('#gx').onclick=()=>gd.close();
 q('#grp').onclick=()=>{q('#menu').hidden=true;q('#gn').value=name;gm('');ui();gd.showModal()};
-M.send=async p=>{if(p.img&&p.img.length>900000){sys('Imagen demasiado grande');return}
+M.send=async p=>{if(p.aud&&p.aud.length>900000){sys('Audio demasiado largo');return}
+ if(p.img&&p.img.length>900000){sys('Imagen demasiado grande');return}
  try{await addDoc(collection(db,'rooms',M.pin,'messages'),{uid,name,ts:serverTimestamp(),...p})}catch(e){sys('No se pudo enviar: '+e.code)}};
-ready.then(()=>{const sv=JSON.parse(localStorage.getItem('malla_room')||'null'),pn=new URLSearchParams(location.search).get('pin');
+const rooms=()=>JSON.parse(localStorage.getItem('malla_rooms')||'[]'),setRooms=a=>localStorage.setItem('malla_rooms',JSON.stringify(a)),setTitle=t=>q('.ttl b').textContent=t;
+function remember(pin,owner,title){setRooms([{pin,owner,title},...rooms().filter(r=>r.pin!==pin)])}
+function list(){const el=q('#gr');el.innerHTML='';rooms().forEach(r=>{const b=document.createElement('button');b.textContent=r.title+' · '+r.pin+(r.pin===M.pin?' (abierto)':'');b.onclick=()=>{gd.close();enter(r.pin,r.owner,r.title)};el.append(b)})}
+q('#gt').onclick=()=>{const t=(prompt('Nombre del chat',q('.ttl b').textContent)||'').trim().slice(0,30);if(t){remember(M.pin,M.owner,t);setTitle(t);list()}};
+/* borrar */
+const dd=q('#dd');let cur=null,lp;
+function del(m){if(dd.open)return;cur=m;q('#da').hidden=!m.dataset.me;dd.showModal()}
+log.addEventListener('pointerdown',e=>{const m=e.target.closest('.m[data-id]');if(m)lp=setTimeout(()=>del(m),600)});
+['pointerup','pointermove','pointercancel'].forEach(v=>log.addEventListener(v,()=>clearTimeout(lp)));
+log.addEventListener('contextmenu',e=>{const m=e.target.closest('.m[data-id]');if(m){e.preventDefault();del(m)}});
+q('#dc').onclick=()=>dd.close();
+q('#dm').onclick=()=>{const id=cur.dataset.id;localStorage.setItem('malla_hide_'+M.pin,JSON.stringify([...hid(),id]));cur.remove();dd.close()};
+q('#da').onclick=async()=>{try{await updateDoc(doc(db,'rooms',M.pin,'messages',cur.dataset.id),{deleted:true,text:'',img:'',aud:'',loc:null})}catch(e){sys('No se pudo eliminar: '+e.code)}dd.close()};
+/* ubicación */
+const msgs=()=>collection(db,'rooms',M.pin,'messages');
+M.liveStart=()=>{if(!navigator.geolocation){sys('Este navegador no tiene geolocalización.');return}
+ let id=null,last=0;const end=Date.now()+36e5;M.live=1;q('#lv').hidden=false;sys('Ubicación en vivo activada por 1 hora.');
+ M.w=navigator.geolocation.watchPosition(async p=>{const n=Date.now();if(n>end){M.liveStop();return}if(n-last<5000)return;last=n;
+  const loc={la:p.coords.latitude,lo:p.coords.longitude,ac:Math.round(p.coords.accuracy),live:true};
+  try{if(!id){M.lid=id=(await addDoc(msgs(),{uid,name,ts:serverTimestamp(),loc})).id}else await updateDoc(doc(db,'rooms',M.pin,'messages',id),{loc})}catch(e){}},
+  e=>{sys('No se pudo obtener la ubicación: '+e.message);M.liveStop()},{enableHighAccuracy:true,maximumAge:2000})};
+M.liveStop=async()=>{navigator.geolocation.clearWatch(M.w);M.live=0;q('#lv').hidden=true;const id=M.lid;M.lid=null;
+ if(id&&M.pin)try{await updateDoc(doc(db,'rooms',M.pin,'messages',id),{'loc.live':false})}catch(e){}sys('Ubicación en vivo detenida.')};
+const lb=document.querySelector('#att [data-a="loc"]');
+if(lb){const setL=(el,t)=>{const w=document.createTreeWalker(el,NodeFilter.SHOW_TEXT);let x,l;while(x=w.nextNode())if(x.textContent.trim())l=x;if(l)l.textContent=t},c=lb.cloneNode(true);
+ setL(lb,'Ubicación en vivo');setL(c,'Ubicación actual');c.dataset.a='loc1';lb.after(c);
+ c.onclick=()=>{if(!M.on){sys('Entra a un grupo para enviar tu ubicación.');return}
+  navigator.geolocation.getCurrentPosition(p=>M.send({loc:{la:p.coords.latitude,lo:p.coords.longitude,ac:Math.round(p.coords.accuracy),live:false}}),e=>sys('No se pudo obtener la ubicación: '+e.message),{enableHighAccuracy:true})}}
+ready.then(()=>{const sv=rooms().find(r=>r.pin===localStorage.getItem('malla_room')),pn=new URLSearchParams(location.search).get('pin');
  if(pn)q('#gp').value=pn.toUpperCase();
- if(sv&&!pn)enter(sv.pin,sv.owner);else{q('#gn').value=name;ui();gd.showModal()}});
+ if(sv&&!pn)enter(sv.pin,sv.owner,sv.title);else{q('#gn').value=name;ui();gd.showModal()}});
 </script>
 </body>
 </html>
