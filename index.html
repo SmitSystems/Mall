@@ -60,6 +60,7 @@ footer{position:relative;display:flex;align-items:flex-end;gap:7px;padding:6px 8
 #act{width:50px;height:50px;border-radius:50%;border:0;color:#fff;cursor:pointer;display:grid;place-items:center;background:linear-gradient(145deg,#1fd1bd,#0c8f83);box-shadow:0 3px 8px rgba(0,0,0,.3);touch-action:none;user-select:none;transition:transform .15s}
 #act.snd .mic,#act:not(.snd) .sd{display:none}.rec #act{transform:scale(1.25);background:#e5393f}
 dialog{border:0;border-radius:16px;background:var(--pop);color:var(--tx);max-width:420px;width:92%;box-shadow:0 10px 40px rgba(0,0,0,.4)}dialog li{margin:7px 0}dialog button{font:inherit;padding:8px 14px;border:0;border-radius:10px;background:var(--acc);color:#fff;cursor:pointer;margin:4px 4px 0 0}
+dialog input{width:100%;box-sizing:border-box;padding:10px;border-radius:10px;border:1px solid rgba(128,128,128,.4);background:var(--inn);color:var(--tx);font:inherit;margin:4px 0}
 </style>
 </head>
 <body>
@@ -84,6 +85,7 @@ dialog{border:0;border-radius:16px;background:var(--pop);color:var(--tx);max-wid
     <button data-m="auto">Modo automático (Internet → Bluetooth)</button>
     <button data-m="net">Solo Internet</button>
     <button data-m="bt">Solo Bluetooth (malla)</button><hr>
+    <button id="grp">Grupo e invitación</button>
     <button id="inst" hidden>Instalar app</button>
     <button id="test">Probar conexión</button>
   </div>
@@ -118,15 +120,21 @@ dialog{border:0;border-radius:16px;background:var(--pop);color:var(--tx);max-wid
   <button id="act" aria-label="Enviar o grabar audio"><svg class="i mic"><use href="#i-mic"/></svg><svg class="i sd"><use href="#i-send"/></svg></button>
 </footer>
 <input type="file" id="file" accept="image/*" hidden>
+<dialog id="gd"><b>Grupo de Malla</b>
+<div id="g0"><p>Tu nombre</p><input id="gn" maxlength="20" placeholder="Ej: Smit">
+<p><button id="gc">Crear grupo nuevo</button></p><p>o entra con un PIN</p>
+<input id="gp" maxlength="6" placeholder="PIN de 6 caracteres" style="text-transform:uppercase"><button id="gj">Unirme</button></div>
+<div id="g1" hidden><p>PIN del grupo: <b id="gi" style="font-size:22px;letter-spacing:3px"></b></p><button id="gs">Compartir invitación</button><button id="gl" style="background:#c0392b">Salir del grupo</button></div>
+<p id="gm" style="color:var(--mut);font-size:13px;min-height:1em"></p><button id="gx">Cerrar</button></dialog>
 <dialog id="dlg"><b>Prueba de conexión</b><ul id="res"></ul><button id="close">Cerrar</button></dialog>
 
 <script>
 const $=s=>document.querySelector(s),log=$('#log'),ic=n=>`<svg class="i"><use href="#i-${n}"/></svg>`;
 let mode='auto',watchId=null,locMsg=null,lastMine=null;
 const tr=()=>mode==='net'?(navigator.onLine?'net':'off'):mode==='bt'?'bt':(navigator.onLine?'net':'bt');
-function refresh(){const t=tr();$('#sub').textContent=t==='net'?'en línea · vía Internet':t==='bt'?'malla Bluetooth · 2 vecinos (simulado)':'sin conexión';
+function refresh(){const t=tr();$('#sub').textContent=window.Malla&&Malla.on?'Grupo '+Malla.pin+' · en línea':t==='net'?'en línea · vía Internet':t==='bt'?'malla Bluetooth · 2 vecinos (simulado)':'sin conexión';
  document.querySelectorAll('#menu [data-m]').forEach(b=>b.classList.toggle('sel',b.dataset.m===mode))}
-const hm=()=>new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+const hm=()=>(window._ts||new Date()).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
 const fmt=s=>Math.floor(s/60)+':'+String(Math.round(s%60)).padStart(2,'0');
 const lab=t=>t==='net'?'🌐':t==='bt'?'📶 '+(1+Math.floor(Math.random()*3))+' saltos':'⚠️';
 const txt=s=>{const p=document.createElement('div');p.textContent=s;return p};
@@ -135,8 +143,8 @@ function add(me,node,t,x='',cls=''){
  const d=document.createElement('div');d.className='m tail'+(me?' me':'')+cls;d.append(node);
  const f=document.createElement('div');f.className='ft';f.innerHTML=`<span>${x}${lab(t)} ${hm()}</span>`+(me?ic('ticks').replace('class="i"','class="i tk"'):'');
  d.append(f);log.append(d);log.scrollTop=log.scrollHeight;if(me)lastMine=d;return d}
-function reply(t,what){if(t==='off')return;const mine=lastMine;$('#sub').textContent='escribiendo…';
- setTimeout(()=>{refresh();add(false,txt('Recibí tu '+what+' ✔'),t);mine&&mine.querySelector('.tk')&&mine.querySelector('.tk').classList.add('rd')},t==='bt'?1600:800)}
+function reply(t,what){if(t==='off')return;const mine=lastMine;
+ setTimeout(()=>{mine&&mine.querySelector('.tk')&&mine.querySelector('.tk').classList.add('rd')},t==='bt'?1600:800)}
 
 addEventListener('online',()=>{refresh();sys('Volvió Internet: se usa la red global.')});
 addEventListener('offline',()=>{refresh();sys('Sin Internet: se usa la malla Bluetooth.')});
@@ -148,7 +156,7 @@ document.addEventListener('click',()=>{$('#menu').hidden=true;setAtt(false)});
 
 const inp=$('#txt'),act=$('#act');
 inp.oninput=()=>act.classList.toggle('snd',!!inp.value.trim());
-function sendTxt(){const v=inp.value.trim();if(!v)return;const t=tr();if(t==='off'){sys('No hay ruta: cambia el modo a Auto o Bluetooth.');return}
+function sendTxt(){const v=inp.value.trim();if(!v)return;if(window.Malla&&Malla.on){Malla.send({text:v});inp.value='';act.classList.remove('snd');return}const t=tr();if(t==='off'){sys('No hay ruta: cambia el modo a Auto o Bluetooth.');return}
  add(true,txt(v),t);inp.value='';act.classList.remove('snd');reply(t,'mensaje')}
 inp.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();sendTxt()}};
 
@@ -159,6 +167,7 @@ file.onchange=e=>{const f=e.target.files[0];if(!f)return;const t=tr();if(t==='of
  const max=t==='bt'?360:900,q=t==='bt'?.5:.8,img=new Image(),url=URL.createObjectURL(f);
  img.onload=()=>{const k=Math.min(1,max/Math.max(img.width,img.height)),c=document.createElement('canvas');c.width=img.width*k;c.height=img.height*k;
   c.getContext('2d').drawImage(img,0,0,c.width,c.height);const data=c.toDataURL('image/jpeg',q),kb=Math.round(data.length*.75/1024);
+  if(window.Malla&&Malla.on){Malla.send({img:data});URL.revokeObjectURL(url);return}
   const el=new Image();el.src=data;el.alt='Imagen enviada';add(true,el,t,kb+' KB'+(t==='bt'?' · '+Math.ceil(kb*1024/180)+' frag. · ':' · '),' img');URL.revokeObjectURL(url);reply(t,'imagen')};
  img.src=url;file.value=''};
 
@@ -171,6 +180,7 @@ function audioNode(url,dur){const d=document.createElement('div');d.className='a
  a.ontimeupdate=()=>{const D=isFinite(a.duration)?a.duration:dur,n=Math.floor(bs.length*a.currentTime/(D||1));bs.forEach((x,i)=>x.classList.toggle('on',i<n))};
  a.onended=()=>{b.innerHTML=ic('play');bs.forEach(x=>x.classList.remove('on'))};return d}
 async function startRec(){
+ if(window.Malla&&Malla.on){sys('Notas de voz: por ahora solo en modo local.');return}
  try{stream=await navigator.mediaDevices.getUserMedia({audio:true});rec=new MediaRecorder(stream)}catch(e){sys('No se pudo usar el micrófono: '+(e.message||e));return}
  chunks=[];canc=false;rec.ondataavailable=e=>chunks.push(e.data);
  rec.onstop=()=>{stream.getTracks().forEach(x=>x.stop());const dur=(Date.now()-t0)/1000;if(canc)return;if(dur<1){sys('Mantén presionado el micrófono para grabar');return}
@@ -194,6 +204,7 @@ function locUpdate(p){const {latitude:la,longitude:lo,accuracy:ac}=p.coords,t=tr
  const {tx,cv,a}=locMsg._b._p;tx.textContent='📍 '+la.toFixed(5)+', '+lo.toFixed(5)+' (±'+Math.round(ac)+' m)';
  a.href='https://www.openstreetmap.org/?mlat='+la+'&mlon='+lo+'#map=16/'+la+'/'+lo;drawMap(cv,la,lo)}
 function toggleLoc(){const b=$('#lv');
+ if(window.Malla&&Malla.on&&watchId===null){sys('Ubicación: por ahora solo en modo local.');return}
  if(watchId!==null){navigator.geolocation.clearWatch(watchId);watchId=null;locMsg=null;b.hidden=true;sys('Ubicación en vivo detenida.');return}
  if(!navigator.geolocation){sys('Este navegador no tiene geolocalización.');return}if(tr()==='off'){sys('No hay ruta para compartir ubicación.');return}
  watchId=navigator.geolocation.watchPosition(locUpdate,err=>{sys('No se pudo obtener la ubicación: '+err.message);navigator.geolocation.clearWatch(watchId);watchId=null;locMsg=null;b.hidden=true},{enableHighAccuracy:true,maximumAge:2000});
@@ -217,6 +228,53 @@ if('serviceWorker' in navigator)try{navigator.serviceWorker.register('sw.js').ca
 refresh();sys('Hoy','day');
 sys('Prototipo: el «vecino» es simulado. Mantén presionado el micrófono para grabar una nota de voz.');
 add(false,txt('¡Hola! Soy un nodo cercano 👋 Prueba texto, imagen, voz o ubicación.'),tr());
+</script>
+<script type="module">
+import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
+import {getAuth,signInAnonymously,onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
+import {getFirestore,doc,getDoc,setDoc,updateDoc,collection,addDoc,query,orderBy,limit,onSnapshot,serverTimestamp} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
+const app=initializeApp({apiKey:"AIzaSyAxdteL5q9feZjsfQhiy7m4A7SHVav3kGw",authDomain:"malla-chat.firebaseapp.com",projectId:"malla-chat",storageBucket:"malla-chat.firebasestorage.app",messagingSenderId:"787737823006",appId:"1:787737823006:web:4b9ef8d39e4eda00ce6b0f"});
+const auth=getAuth(app),db=getFirestore(app),M=window.Malla={on:false,pin:null,owner:false},q=s=>document.querySelector(s);
+let uid=null,name=localStorage.getItem('malla_name')||'',un=[],seen=new Set();
+const ready=new Promise(r=>onAuthStateChanged(auth,u=>{if(u){uid=u.uid;r()}}));
+signInAnonymously(auth).catch(e=>gm('No se pudo iniciar sesión ('+e.code+'). Revisa que Anónimo esté habilitado.'));
+const gm=t=>q('#gm').textContent=t,gd=q('#gd');
+function ui(){q('#g0').hidden=!!M.pin;q('#g1').hidden=!M.pin;q('#gi').textContent=M.pin||''}
+const gen=()=>{const a='ABCDEFGHJKMNPQRSTUVWXYZ23456789',r=crypto.getRandomValues(new Uint8Array(6));return [...r].map(x=>a[x%a.length]).join('')};
+function nm(){name=q('#gn').value.trim();if(!name){gm('Escribe tu nombre primero');return ''}localStorage.setItem('malla_name',name);return name}
+function leave(keep){un.forEach(f=>f());un=[];seen.clear();M.on=false;M.pin=null;if(!keep)localStorage.removeItem('malla_room');refresh();ui()}
+function render(d){const me=d.uid===uid,n=document.createElement('div');
+ if(!me){const b=document.createElement('b');b.textContent=d.name||'?';b.style.cssText='display:block;font-size:12.5px;color:var(--acc)';n.append(b)}
+ if(d.text)n.append(txt(d.text));
+ if(d.img){const i=new Image();i.src=d.img;i.alt='Imagen';i.style.maxWidth='100%';n.append(i)}
+ window._ts=d.ts&&d.ts.toDate?d.ts.toDate():new Date();const m=add(me,n,'net');window._ts=null;
+ const k=m.querySelector('.tk');k&&k.classList.add('rd')}
+function start(){M.on=true;log.innerHTML='';sys('Grupo '+M.pin+' conectado. Los mensajes llegan en tiempo real.');refresh();ui();
+ un.push(onSnapshot(query(collection(db,'rooms',M.pin,'messages'),orderBy('ts'),limit(200)),s=>{
+  s.docChanges().forEach(c=>{if(c.type!=='added'||seen.has(c.doc.id))return;seen.add(c.doc.id);render(c.doc.data({serverTimestamps:'estimate'}))})},e=>sys('Error leyendo mensajes: '+e.code)))}
+function ask(id,n){const d=document.createElement('div');d.className='sys';d.textContent=n+' quiere entrar al grupo ';
+ [['Aceptar','accepted'],['Rechazar','rejected']].forEach(([l,st])=>{const b=document.createElement('button');b.textContent=l;
+  b.style.cssText='margin:6px 4px 0;padding:6px 12px;border:0;border-radius:8px;background:#12a89a;color:#fff;font:inherit';
+  b.onclick=async()=>{try{await updateDoc(doc(db,'rooms',M.pin,'requests',id),{status:st});d.remove();sys(n+(st==='accepted'?' ya puede chatear':' fue rechazado'))}catch(e){sys('Error: '+e.code)}};d.append(b)});
+ log.append(d);log.scrollTop=log.scrollHeight}
+function enter(pin,owner){leave(true);M.pin=pin;M.owner=owner;localStorage.setItem('malla_room',JSON.stringify({pin,owner}));ui();
+ if(owner){start();un.push(onSnapshot(collection(db,'rooms',pin,'requests'),s=>s.docChanges().forEach(c=>{const d=c.doc.data();if(c.type!=='removed'&&d.status==='pending')ask(c.doc.id,d.name)}),e=>sys('Error: '+e.code)))}
+ else un.push(onSnapshot(doc(db,'rooms',pin,'requests',uid),s=>{const st=s.data()&&s.data().status;
+  if(st==='accepted'){if(!M.on){gd.close();start()}}else if(st==='rejected'){gm('El anfitrión rechazó tu solicitud.');leave()}else gm('Esperando que el anfitrión te acepte…')},e=>gm('Error: '+e.code)))}
+q('#gc').onclick=async()=>{try{await ready;if(!nm())return;let pin;do{pin=gen()}while((await getDoc(doc(db,'rooms',pin))).exists());
+ await setDoc(doc(db,'rooms',pin),{owner:uid,ownerName:name,createdAt:serverTimestamp()});enter(pin,true);gm('Listo. Comparte la invitación.')}catch(e){gm('Error: '+(e.code||e.message))}};
+q('#gj').onclick=async()=>{try{await ready;if(!nm())return;const pin=q('#gp').value.trim().toUpperCase(),r=await getDoc(doc(db,'rooms',pin));
+ if(!r.exists()){gm('Ese PIN no existe');return}if(r.data().owner===uid){enter(pin,true);return}
+ const rq=doc(db,'rooms',pin,'requests',uid);if(!(await getDoc(rq)).exists())await setDoc(rq,{name,status:'pending',ts:serverTimestamp()});enter(pin,false)}catch(e){gm('Error: '+(e.code||e.message))}};
+q('#gs').onclick=async()=>{const u=location.origin+location.pathname+'?pin='+M.pin,t='Únete a mi chat en Malla. PIN: '+M.pin+'\n'+u;
+ try{if(navigator.share)await navigator.share({text:t});else{await navigator.clipboard.writeText(t);gm('Invitación copiada')}}catch(e){}};
+q('#gl').onclick=()=>{leave();gm('Saliste del grupo')};q('#gx').onclick=()=>gd.close();
+q('#grp').onclick=()=>{q('#menu').hidden=true;q('#gn').value=name;gm('');ui();gd.showModal()};
+M.send=async p=>{if(p.img&&p.img.length>900000){sys('Imagen demasiado grande');return}
+ try{await addDoc(collection(db,'rooms',M.pin,'messages'),{uid,name,ts:serverTimestamp(),...p})}catch(e){sys('No se pudo enviar: '+e.code)}};
+ready.then(()=>{const sv=JSON.parse(localStorage.getItem('malla_room')||'null'),pn=new URLSearchParams(location.search).get('pin');
+ if(pn)q('#gp').value=pn.toUpperCase();
+ if(sv&&!pn)enter(sv.pin,sv.owner);else{q('#gn').value=name;ui();gd.showModal()}});
 </script>
 </body>
 </html>

@@ -32,6 +32,7 @@ Genera los iconos de lanzador de Android (con versión adaptable) e iOS desde as
 3. `flutter run --dart-define=WS_URL=ws://TU_IP:8080`
 
 ## Estado honesto
-- index.html es un prototipo con «vecino» simulado; no conecta a otras personas.
+- index.html ahora usa Firebase (proyecto malla-chat): grupo con PIN de invitación, aceptar/rechazar y mensajes de texto e imagen en tiempo real. Notas de voz y ubicación siguen solo en local.
+- Requiere en Firebase: Authentication → Anónimo habilitado, Firestore creado con las reglas publicadas y el dominio de GitHub Pages autorizado.
 - La app Flutter no fue compilada ni probada. `lib/transports/ble_radio.dart` es un stub (sin Bluetooth real).
 - Sin cifrado, cuentas ni salas privadas.
